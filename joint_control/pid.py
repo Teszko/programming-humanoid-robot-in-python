@@ -34,10 +34,10 @@ class PIDController(object):
         self.e1 = np.zeros(size)
         self.e2 = np.zeros(size)
         # ADJUST PARAMETERS BELOW
-        delay = 0
-        self.Kp = 0
-        self.Ki = 0
-        self.Kd = 0
+        delay = 1
+        self.Kp = 40
+        self.Ki = 0.1
+        self.Kd = 0.1
         self.y = deque(np.zeros(size), maxlen=delay + 1)
 
     def set_delay(self, delay):
@@ -53,6 +53,23 @@ class PIDController(object):
         @return control signal
         '''
         # YOUR CODE HERE
+
+	if not len(target) == len(sensor):
+		raise IndexError('number of inputs does not fit.')
+
+	number_of_inputs = len(target)
+
+	speed = 0.01
+	dt = 0.16
+	delay = self.y[0]
+
+	for i in xrange(0, number_of_inputs):
+		error = target[i] - sensor[i] + self.__prediction(sensor[i], speed, dt*delay)
+		self.u[i] = self.u[i] + (self.Kp + self.Ki * self.dt + self.Kd / self.dt) * error \
+			  - (self.Kp + 2 * self.Kd / self.dt ) * self.e1[i] \
+			  + self.Kd / self.dt * self.e2[i]
+		self.e2[i] = self.e1[i]
+		self.e1[i] = error
 
         return self.u
 
