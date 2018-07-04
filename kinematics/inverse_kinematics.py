@@ -13,6 +13,30 @@
 from forward_kinematics import ForwardKinematicsAgent
 from numpy.matlib import identity
 
+'''
+theta = random.random(N)
+lambda_ = 1
+max_step = 0.1
+def inverse_kinematics_fork(x_e, y_e, z_e, theta_x, theta_y, theta_z, theta):
+    target = matrix([[x_e, y_e, z_e, theta_x, theta_y, theta_z]]).T
+    for i in range(10):
+        Ts = forward_kinematics(T0, l, theta)
+        Te = matrix([from_trans(Ts[-1])]).T
+        e = target - Te
+        e[e > max_step] = max_step
+        e[e < -max_step] = -max_step
+        T = matrix([from_trans(i) for i in Ts[1:-1]]).T
+        J = Te - T
+        dT = Te - T
+        J[0, :] = -dT[1, :] # x
+        J[1, :] = dT[0, :] # y
+        J[-1, :] = 1  # angular
+        d_theta = lambda_ * pinv(J) * e
+        theta += asarray(d_theta.T)[0]
+        if  linalg.norm(d_theta) < 1e-4:
+            break
+    return theta
+    '''
 
 class InverseKinematicsAgent(ForwardKinematicsAgent):
     def inverse_kinematics(self, effector_name, transform):
@@ -22,8 +46,24 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
         :param transform: 4x4 transform matrix
         :return: list of joint angles
         '''
+
         joint_angles = []
         # YOUR CODE HERE
+
+        max_step = 0.1
+        lambda_ = 1
+
+        chain = self.chains[effector_name]
+        last_element_name = chain[-1]
+
+        target = ForwardKinematicsAgent.decompose_matrix(transform)
+
+        Ts = self.transforms[last_element_name]
+        Te = ForwardKinematicsAgent.decompose_matrix(Ts)
+
+        e = target - Te
+        e[e > max_step] = max_step
+        e[e < -max_step] = -max_step
         return joint_angles
 
     def set_transforms(self, effector_name, transform):
